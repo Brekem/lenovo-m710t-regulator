@@ -1,0 +1,5 @@
+# Binarios generados (el Setup se publica en Releases)
+*.exe
+*.dll
+*.zip
+lhm/
