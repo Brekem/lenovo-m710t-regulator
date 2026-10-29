@@ -13,15 +13,19 @@ con **Intel Core i7-7700**, pensado para jugar (por ejemplo ARC Raiders) sin que
   - **freno a 85 °C**: baja 200 MHz de golpe,
   - vuelve a subir cuando baja de **80 °C**,
   - nunca baja de **2.9 GHz**.
-- **Gaming dinámico con Turbo**: de 2.9 a **4.2 GHz**; el regulador enciende el Turbo solo cuando la temperatura lo permite.
+- **Dos modos de juego con Turbo** (de 2.9 a **4.2 GHz**; el regulador enciende el Turbo solo cuando la temperatura lo permite):
+  - **Gaming eficiente dinámico**: Turbo *eficiente*, sube cuando el juego lo pide y baja en menús y pausas (gasta menos con el mismo rendimiento jugando).
+  - **Gaming dinámico**: Turbo *agresivo*, siempre a tope.
 - **Ventilador de salida** (FANIN2) más fuerte al jugar: 80 %, y 90 % si el CPU llega a 82 °C. Al salir del modo vuelve al control de la placa.
+- **Ventilador del CPU** (solo en Gaming eficiente dinámico): lo controla la placa; al llegar a 80 °C se pone al 100 % y bajo 75 °C se le devuelve a la placa. Nunca lo pone por debajo de lo que pone la placa.
 - Al encender la PC arranca en **Normal fresco**. Si dejas la PC sola 20 minutos en un modo de juego (sin el juego abierto), vuelve sola a Normal fresco.
 - **Windows original** deshace todo y deja Windows como estaba.
 
 | Modo | Techo del CPU |
 |---|---|
-| Gaming dinámico | 4.2 GHz (Turbo) |
-| Normal fresco / Gaming eficiente / Alto rendimiento / Ahorro | 3.3 GHz |
+| Gaming eficiente dinámico | 4.2 GHz (Turbo eficiente) |
+| Gaming dinámico | 4.2 GHz (Turbo agresivo) |
+| Normal fresco / Alto rendimiento / Ahorro | 3.3 GHz |
 | Gaming fresco / CPU suelto | 3.2 GHz |
 | Windows original | sin regulador |
 
@@ -53,7 +57,7 @@ Para compilar el Setup se necesita [LibreHardwareMonitor](https://github.com/Lib
 Los valores están ajustados para un i7-7700 con el Turbo controlado por el regulador.
 En otro procesador funciona, pero los techos (3.2 / 3.3 / 4.2 GHz) pueden no ser los adecuados:
 se cambian en `motor.ps1` (`$CPU_MHZ_LIMITE`, `$CPU_MHZ_FRESCO`, `$CPU_MHZ_LOOSE`, `$CPU_TURBO_MHZ`).
-El control del ventilador **solo se activa en la placa Lenovo 3102**; en otras placas no se toca ningún ventilador.
+El control de los ventiladores **solo se activa en la placa Lenovo 3102**; en otras placas no se toca ningún ventilador.
 En CPUs AMD el regulador puede no encontrar el sensor de temperatura.
 
 ## Créditos

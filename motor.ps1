@@ -91,7 +91,7 @@ $CPU_MHZ_LOOSE = 3200
 # Turbo maximo del CPU (i7-7700: 4.2 GHz). Solo lo usa "Gaming dinamico": el regulador
 # enciende el Turbo por encima de la velocidad base y lo va bajando si el CPU se calienta.
 $CPU_TURBO_MHZ = 4200
-$TURBO_MODOS   = @('dinamico')
+$TURBO_MODOS   = @{ dinamico = 2; gaming = 3 }   # 2 = Turbo agresivo, 3 = Turbo eficiente (solo cuando hace falta)
 
 function Limitar-Velocidad($plan, [int]$mhz = $CPU_MHZ_LIMITE) {
     if ($mhz -le 0) { return }
@@ -419,11 +419,12 @@ function Restaurar-Ventilador {
 # "Windows original" no tiene regulador: deja Windows exactamente como estaba.
 $TECHO_MODO = @{
     normal = $CPU_MHZ_LIMITE; ahorro = $CPU_MHZ_LIMITE; ahorrosinsusp = $CPU_MHZ_LIMITE
-    gaming = $CPU_MHZ_LIMITE; altorend = $CPU_MHZ_LIMITE
+    altorend = $CPU_MHZ_LIMITE
     gamingfresco = $CPU_MHZ_FRESCO; cpuloose = $CPU_MHZ_LOOSE
-    dinamico = $CPU_TURBO_MHZ
+    dinamico = $CPU_TURBO_MHZ; gaming = $CPU_TURBO_MHZ
 }
 $VENT_JUEGO_MODOS = 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'altorend'
+$VENT_CPU_MODOS = @('gaming')   # ventilador del CPU al 100% desde 80 C (solo sube, nunca baja de la placa)
 $CFG_GOB = Join-Path $dir 'gobernador.cfg'
 function Iniciar-Gobernador([string]$m) {
     if (-not $TECHO_MODO.ContainsKey($m)) { return }
@@ -434,8 +435,8 @@ function Iniciar-Gobernador([string]$m) {
         $p = Plan-Activo; Limitar-Velocidad $p ([math]::Min($mhz, 3200)); Activar $p; return
     }
     $vent = if ($m -in $VENT_JUEGO_MODOS) { 'juego' } else { 'auto' }
-    $turbo = if ($m -in $TURBO_MODOS) { 1 } else { 0 }
-    @("max=$mhz", "ventilador=$vent", "plan=$(Plan-Activo)", "turbo=$turbo") | Set-Content $CFG_GOB -Encoding ASCII
+    $turbo = if ($TURBO_MODOS.ContainsKey($m)) { $TURBO_MODOS[$m] } else { 0 }
+    @("max=$mhz", "ventilador=$vent", "plan=$(Plan-Activo)", "turbo=$turbo", "ventcpu=$(if ($m -in $VENT_CPU_MODOS) { 1 } else { 0 })") | Set-Content $CFG_GOB -Encoding ASCII
     try { Start-ScheduledTask -TaskPath '\ModoGaming\' -TaskName 'gobernador' -ErrorAction Stop }
     catch { Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$GOBERNADOR`"" }
     Ok ("Regulador termico activo: hasta {0:N1} GHz, baja de a poco en 84 C (freno en 85 C) y sube bajo 80 C (minimo 2.9 GHz)." -f ($mhz / 1000))
@@ -490,7 +491,9 @@ switch ($Modo) {
     'gaming' {
         Tomar-Foto
         Modo-Gaming
-        Write-Host ""; Write-Host "MODO GAMING EFICIENTE ACTIVADO." -ForegroundColor Cyan
+        Poner $EQUILIBRADO CPU_EPP 50           # Turbo eficiente: sube con carga, baja en menus y pausas
+        Activar $EQUILIBRADO
+        Write-Host ""; Write-Host "MODO GAMING EFICIENTE DINAMICO ACTIVADO (Turbo solo cuando hace falta)." -ForegroundColor Cyan
     }
 
     'gamingfresco' {

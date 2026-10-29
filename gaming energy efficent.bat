@@ -1,7 +1,8 @@
 @echo off
 REM ============================
 REM MODO GAMING EFICIENTE
-REM Equilibrado + sin suspension + servicios detenidos + cierra programas
+REM Dinamico 2.9-4.2 GHz con Turbo eficiente (solo cuando el juego lo pide),
+REM max 85 C. Equilibrado + sin suspension + servicios detenidos + cierra programas
 REM en segundo plano (Edge, Widgets...) + internet + RAM.
 REM Todos los modos usan el mismo motor y la misma foto de tu
 REM configuracion original, asi nunca se pisan entre ellos:

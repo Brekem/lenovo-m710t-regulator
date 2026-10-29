@@ -39,6 +39,13 @@ $VENT_JUEGO    = 80     # % al jugar (la placa lo deja en 50%: ~1750 RPM; 80% = 
 $VENT_ALTO     = 90     # % cuando el CPU llega a $VENT_TEMP_ALTA
 $VENT_TEMP_ALTA = 82    # C
 
+# Ventilador del CPU (conector CPU_FAN = "Fan #1"), solo en "Gaming eficiente dinamico":
+#   lo controla la placa; si el CPU llega a $VENT_CPU_SUBE se pone al 100% y bajo $VENT_CPU_SUELTA
+#   se le devuelve a la placa. Nunca se pone por debajo de lo que pone la placa.
+$VENT_CPU        = 'Fan #1'
+$VENT_CPU_SUBE   = 80   # C
+$VENT_CPU_SUELTA = 75   # C
+
 $SUB_CPU     = '54533251-82be-4824-96c1-47b60b740d00'
 $CPU_MHZ     = '75b0ae3f-bce0-45a7-8c89-c9611c25e100'
 $CPU_MAX     = 'bc5038f7-23e0-4960-96da-33abaf5935ec'
@@ -66,7 +73,9 @@ if (Test-Path $cfgFile) {
 $MAX_MHZ  = [math]::Max($MIN_MHZ, [int]$cfg.max)
 $VENT_MODO = $cfg.ventilador      # 'juego' o 'auto'
 $PLAN     = $cfg.plan
-$TURBO    = ($cfg.turbo -eq '1')  # solo "Gaming dinamico": por encima de la velocidad base se enciende el Turbo
+$TURBO    = [int]$cfg.turbo           # 0 = sin Turbo, 2 = agresivo (Gaming dinamico), 3 = eficiente (Gaming eficiente)
+if ($TURBO -eq 1) { $TURBO = 2 }   # configuracion vieja
+$CON_VENT_CPU = ($cfg.ventcpu -eq '1')
 
 # Minutos desde la ultima vez que se toco el teclado o el raton
 Add-Type -Namespace ModoGaming -Name Inactividad -MemberDefinition @'
@@ -84,7 +93,7 @@ $mutex = New-Object Threading.Mutex($false, 'Global\ModoGamingGobernador')
 try { if (-not $mutex.WaitOne(0)) { exit 0 } } catch [Threading.AbandonedMutexException] { }   # la copia anterior fue cerrada a la fuerza
 
 # Empezar el registro de cero en cada sesion (que no crezca para siempre)
-Set-Content $logFile ("{0:yyyy-MM-dd HH:mm:ss}  Regulador iniciado en modo '{1}': {2}-{3} MHz, baja en {4} C, sube bajo {5} C, ventilador {6}, turbo {7}" -f (Get-Date), $MODO, $MIN_MHZ, $MAX_MHZ, $CALIENTE, $FRESCO, $VENT_MODO, $(if ($TURBO) { 'si' } else { 'no' })) -Encoding ASCII
+Set-Content $logFile ("{0:yyyy-MM-dd HH:mm:ss}  Regulador iniciado en modo '{1}': {2}-{3} MHz, baja en {4} C, sube bajo {5} C, ventilador {6}, turbo {7}" -f (Get-Date), $MODO, $MIN_MHZ, $MAX_MHZ, $CALIENTE, $FRESCO, $VENT_MODO, $(switch ($TURBO) { 2 { 'agresivo' } 3 { 'eficiente' } default { 'no' } })) -Encoding ASCII
 
 $dll = Join-Path $PSScriptRoot 'lhm\LibreHardwareMonitorLib.dll'
 if (-not (Test-Path $dll)) { Log "ERROR: falta $dll (reinstala Modo Gaming)"; exit 1 }
@@ -107,6 +116,18 @@ try {
 } catch { $vent = $null }
 # Valor que tenia al arrancar: si ya estaba alto (quedo asi de un cierre forzado), "original" seria ese valor alto
 $ventInicial = try { [double]($sio.Sensors | Where-Object { $_.SensorType -eq 'Control' -and $_.Name -eq $VENT_SALIDA } | Select-Object -First 1).Value } catch { 0 }
+# Ventilador del CPU (solo si el modo lo pide; al soltarlo vuelve a la curva de la placa)
+$ventCpu = $null; $ventCpuAlto = $false
+if ($CON_VENT_CPU -and $sio) { try { $ventCpu = ($sio.Sensors | Where-Object { $_.SensorType -eq 'Control' -and $_.Name -eq $VENT_CPU } | Select-Object -First 1).Control } catch { $ventCpu = $null } }
+function Subir-VentCpu {
+    if (-not $ventCpu -or $script:ventCpuAlto) { return }
+    try { $ventCpu.SetSoftware(100); $script:ventCpuAlto = $true; Log "Ventilador del CPU al 100%" } catch { Log "No se pudo controlar el ventilador del CPU: $($_.Exception.Message)"; $script:ventCpu = $null }
+}
+function Soltar-VentCpu {
+    if (-not $ventCpu -or -not $script:ventCpuAlto) { return }
+    try { $ventCpu.SetDefault(); Log "Ventilador del CPU devuelto a la placa" } catch {}
+    $script:ventCpuAlto = $false
+}
 function Poner-Ventilador([int]$pct) {
     if (-not $vent -or $pct -eq $script:ventActual) { return }
     try { $vent.SetSoftware($pct); $script:ventActual = $pct; Log "Ventilador de salida al $pct%" } catch { Log "No se pudo controlar el ventilador: $($_.Exception.Message)"; $script:vent = $null }
@@ -132,7 +153,7 @@ function Poner-Limite([int]$mhz) {
     $pct = if ($base -gt 0) { [math]::Min(100, [math]::Floor($mhz * 100 / $base)) } else { 100 }
     # Turbo encendido solo si el modo lo permite y el limite pasa de la velocidad base (3.6 GHz);
     # el limite en MHz tambien frena el Turbo (por ejemplo 3.9 GHz = Turbo hasta 3.9)
-    $boost = if ($TURBO -and $base -gt 0 -and $mhz -gt $base) { 2 } else { 0 }
+    $boost = if ($TURBO -gt 0 -and $base -gt 0 -and $mhz -gt $base) { $TURBO } else { 0 }
     powercfg /setacvalueindex $PLAN $SUB_CPU $CPU_MHZ $mhz | Out-Null
     powercfg /setacvalueindex $PLAN $SUB_CPU $CPU_MAX $pct | Out-Null
     powercfg /setacvalueindex $PLAN $SUB_CPU $CPU_BOOST $boost | Out-Null
@@ -163,6 +184,8 @@ while ((Modo-Actual) -eq $MODO -and -not (Test-Path $pararFile)) {
         if ($t -ge $VENT_TEMP_ALTA) { Poner-Ventilador $VENT_ALTO }
         elseif ($VENT_MODO -eq 'juego' -and $t -le $VENT_TEMP_ALTA - 4) { Poner-Ventilador $VENT_JUEGO }
         elseif ($VENT_MODO -ne 'juego' -and $t -le $VENT_TEMP_ALTA - 6 -and $ventActual -ge 0) { Soltar-Ventilador; Log "Ventilador de salida devuelto a la placa" }
+        # Ventilador del CPU
+        if ($t -ge $VENT_CPU_SUBE) { Subir-VentCpu } elseif ($t -le $VENT_CPU_SUELTA) { Soltar-VentCpu }
         # Velocidad del CPU
         if ($t -ge $CALIENTE) { $segCaliente += $INTERVALO; $segFresco = 0 }
         elseif ($t -le $FRESCO) { $segFresco += $INTERVALO; $segCaliente = 0 }
@@ -187,6 +210,7 @@ while ((Modo-Actual) -eq $MODO -and -not (Test-Path $pararFile)) {
         if ($inactivo -ge $MIN_INACTIVO -and -not (Get-Process -Name $JUEGOS -ErrorAction SilentlyContinue)) {
             Log ("{0:N0} min sin usar la PC y sin juego abierto -> vuelve a Normal fresco" -f $inactivo)
             Soltar-Ventilador
+            Soltar-VentCpu
             Cerrar-Sensores
             try { Start-ScheduledTask -TaskPath '\ModoGaming\' -TaskName 'normal' -ErrorAction Stop }
             catch { Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $PSScriptRoot 'motor.ps1')`" -Modo normal" }
@@ -204,5 +228,6 @@ while ((Modo-Actual) -eq $MODO -and -not (Test-Path $pararFile)) {
 
 Log "Modo cambiado: regulador detenido."
 Soltar-Ventilador
+Soltar-VentCpu
 Cerrar-Sensores
 $mutex.ReleaseMutex()

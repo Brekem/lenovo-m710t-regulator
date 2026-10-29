@@ -38,7 +38,7 @@ class Modo
 class Bandeja : ApplicationContext
 {
     static readonly Modo[] Modos = {
-        new Modo("gaming",        "Gaming eficiente (hasta 3.3 GHz, max 85 C)", "G", Color.FromArgb(46, 160, 67)),
+        new Modo("gaming",        "Gaming eficiente dinamico (2.9-4.2 GHz ahorrando, max 85 C)", "G", Color.FromArgb(46, 160, 67)),
         new Modo("gamingfresco",  "Gaming fresco (hasta 3.2 GHz, max 85 C)", "F", Color.FromArgb(0, 150, 160)),
         new Modo("cpuloose",      "CPU suelto (hasta 3.2 GHz, max 85 C)", "C", Color.FromArgb(230, 126, 34)),
         new Modo("dinamico",      "Gaming dinamico (2.9-4.2 GHz turbo, max 85 C)", "T", Color.FromArgb(200, 60, 140)),
