@@ -14,8 +14,8 @@ using System.Reflection;
 [assembly: AssemblyTitle("Modo Gaming - Instalador")]
 [assembly: AssemblyProduct("Modo Gaming")]
 [assembly: AssemblyCompany("ibrek")]
-[assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyVersion("1.3.0.0")]
+[assembly: AssemblyFileVersion("1.3.0.0")]
 
 class Setup
 {
@@ -23,7 +23,7 @@ class Setup
     {
         Console.Title = "Modo Gaming - Instalar / Actualizar";
         Console.WriteLine("==========================================");
-        Console.WriteLine("  MODO GAMING v1.2 - instalar / actualizar");
+        Console.WriteLine("  MODO GAMING v1.3 - instalar / actualizar");
         Console.WriteLine("==========================================");
         Console.WriteLine();
 

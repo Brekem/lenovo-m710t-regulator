@@ -11,7 +11,7 @@
 # ============================================================
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('original', 'ahorro', 'ahorrosinsusp', 'normal', 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'revertircpu', 'altorend', 'snapshot', 'cerrarcpu')]
+    [ValidateSet('original', 'ahorro', 'ahorrosinsusp', 'normal', 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'trabajo', 'revertircpu', 'altorend', 'snapshot', 'cerrarcpu')]
     [string]$Modo
 )
 
@@ -91,7 +91,7 @@ $CPU_MHZ_LOOSE = 3200
 # Turbo maximo del CPU (i7-7700: 4.2 GHz). Solo lo usa "Gaming dinamico": el regulador
 # enciende el Turbo por encima de la velocidad base y lo va bajando si el CPU se calienta.
 $CPU_TURBO_MHZ = 4200
-$TURBO_MODOS   = @{ dinamico = 2; gaming = 3 }   # 2 = Turbo agresivo, 3 = Turbo eficiente (solo cuando hace falta)
+$TURBO_MODOS   = @{ dinamico = 2; gaming = 3; trabajo = 3 }   # 2 = Turbo agresivo, 3 = Turbo eficiente (solo cuando hace falta)
 
 function Limitar-Velocidad($plan, [int]$mhz = $CPU_MHZ_LIMITE) {
     if ($mhz -le 0) { return }
@@ -421,10 +421,10 @@ $TECHO_MODO = @{
     normal = $CPU_MHZ_LIMITE; ahorro = $CPU_MHZ_LIMITE; ahorrosinsusp = $CPU_MHZ_LIMITE
     altorend = $CPU_MHZ_LIMITE
     gamingfresco = $CPU_MHZ_FRESCO; cpuloose = $CPU_MHZ_LOOSE
-    dinamico = $CPU_TURBO_MHZ; gaming = $CPU_TURBO_MHZ
+    dinamico = $CPU_TURBO_MHZ; gaming = $CPU_TURBO_MHZ; trabajo = $CPU_TURBO_MHZ
 }
 $VENT_JUEGO_MODOS = 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'altorend'
-$VENT_CPU_MODOS = @('gaming')   # ventilador del CPU al 100% desde 80 C (solo sube, nunca baja de la placa)
+$VENT_CPU_MODOS = @('gaming', 'trabajo')   # ventilador del CPU al 100% desde 80 C (solo sube, nunca baja de la placa)
 $CFG_GOB = Join-Path $dir 'gobernador.cfg'
 function Iniciar-Gobernador([string]$m) {
     if (-not $TECHO_MODO.ContainsKey($m)) { return }
@@ -519,6 +519,25 @@ switch ($Modo) {
         Ok "CPU suelto: respuesta maxima y nucleos siempre listos."
         Guardar-Modo 'dinamico'          # el regulador (al final) sube hasta 4.2 (Turbo) segun la temperatura
         Write-Host ""; Write-Host "MODO GAMING DINAMICO ACTIVADO." -ForegroundColor Cyan
+    }
+
+    'trabajo' {
+        # Trabajo: todo el CPU que se pueda (Turbo eficiente hasta 4.2 GHz, el regulador lo mantiene en 85 C)
+        # sin suspender nunca. No cierra programas ni detiene servicios.
+        Tomar-Foto
+        Volver-A-Original | Out-Null
+        Poner $EQUILIBRADO CPU_BOOST 0          # el regulador enciende el Turbo cuando la temperatura lo permite
+        Limitar-Velocidad $EQUILIBRADO $CPU_TURBO_MHZ
+        Poner $EQUILIBRADO CPU_MIN 5            # CPU baja en reposo
+        Poner $EQUILIBRADO CPU_EPP 25           # a demanda: sube rapido cuando hay trabajo, baja cuando no hay carga
+        Poner $EQUILIBRADO SUSPENDER 0          # Nunca suspender
+        Poner $EQUILIBRADO PANTALLA 900         # Pantalla se apaga a los 15 min (la PC sigue trabajando)
+        Activar $EQUILIBRADO
+        Poner-ModoEnergia $MODO_RENDIMIENTO
+        Ok "Plan Equilibrado + Mejor rendimiento. La PC NO se suspende (pantalla se apaga a los 15 min)."
+        Ok "Programas y servicios sin tocar."
+        Guardar-Modo 'trabajo'
+        Write-Host ""; Write-Host "MODO TRABAJO ACTIVADO." -ForegroundColor Cyan
     }
 
     'revertircpu' {

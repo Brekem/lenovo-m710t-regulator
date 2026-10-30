@@ -42,6 +42,7 @@ class Bandeja : ApplicationContext
         new Modo("gamingfresco",  "Gaming fresco (hasta 3.2 GHz, max 85 C)", "F", Color.FromArgb(0, 150, 160)),
         new Modo("cpuloose",      "CPU suelto (hasta 3.2 GHz, max 85 C)", "C", Color.FromArgb(230, 126, 34)),
         new Modo("dinamico",      "Gaming dinamico (2.9-4.2 GHz turbo, max 85 C)", "T", Color.FromArgb(200, 60, 140)),
+        new Modo("trabajo",       "Trabajo (2.9-4.2 GHz, max 85 C, sin suspender)", "J", Color.FromArgb(150, 110, 40)),
         new Modo("altorend",     "Alto rendimiento seguro (max 85 C)", "A", Color.FromArgb(200, 40, 40)),
         new Modo("ahorro",        "Ahorro de energia",                 "E", Color.FromArgb(40, 120, 200)),
         new Modo("ahorrosinsusp", "Ahorro de energia sin suspension",  "D", Color.FromArgb(90, 80, 200)),

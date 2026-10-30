@@ -101,7 +101,7 @@ try {
     $motor = Join-Path $destino 'motor.ps1'
     $principal = New-ScheduledTaskPrincipal -UserId $Usuario -LogonType Interactive -RunLevel Highest
     $ajustes = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -MultipleInstances IgnoreNew
-    foreach ($modo in 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'revertircpu', 'altorend', 'ahorro', 'ahorrosinsusp', 'normal', 'original') {
+    foreach ($modo in 'gaming', 'gamingfresco', 'cpuloose', 'dinamico', 'trabajo', 'revertircpu', 'altorend', 'ahorro', 'ahorrosinsusp', 'normal', 'original') {
         # conhost --headless: corre sin mostrar ninguna ventana de consola
         $accion = New-ScheduledTaskAction -Execute "$env:WINDIR\System32\conhost.exe" -Argument "--headless powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$motor`" -Modo $modo"
         $tarea = @{ TaskPath = '\ModoGaming\'; TaskName = $modo; Action = $accion; Principal = $principal; Settings = $ajustes; Force = $true }
@@ -128,7 +128,7 @@ try {
     $uninst = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ModoGaming'
     New-Item -Path $uninst -Force | Out-Null
     Set-ItemProperty $uninst DisplayName 'Modo Gaming'
-    Set-ItemProperty $uninst DisplayVersion '1.2'
+    Set-ItemProperty $uninst DisplayVersion '1.3'
     Set-ItemProperty $uninst Publisher 'ibrek'
     Set-ItemProperty $uninst DisplayIcon $exe
     Set-ItemProperty $uninst InstallLocation $destino

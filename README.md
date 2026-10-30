@@ -16,8 +16,9 @@ con **Intel Core i7-7700**, pensado para jugar (por ejemplo ARC Raiders) sin que
 - **Dos modos de juego con Turbo** (de 2.9 a **4.2 GHz**; el regulador enciende el Turbo solo cuando la temperatura lo permite):
   - **Gaming eficiente dinámico**: Turbo *eficiente*, sube cuando el juego lo pide y baja en menús y pausas (gasta menos con el mismo rendimiento jugando).
   - **Gaming dinámico**: Turbo *agresivo*, siempre a tope.
+- **Modo Trabajo**: Turbo a demanda hasta **4.2 GHz** (sube rápido cuando hay carga, baja en reposo), **nunca se suspende** (solo apaga la pantalla a los 15 min) y no cierra programas ni detiene servicios. Ventilador del CPU al 100 % desde 80 °C.
 - **Ventilador de salida** (FANIN2) más fuerte al jugar: 80 %, y 90 % si el CPU llega a 82 °C. Al salir del modo vuelve al control de la placa.
-- **Ventilador del CPU** (solo en Gaming eficiente dinámico): lo controla la placa; al llegar a 80 °C se pone al 100 % y bajo 75 °C se le devuelve a la placa. Nunca lo pone por debajo de lo que pone la placa.
+- **Ventilador del CPU** (solo en Gaming eficiente dinámico y Trabajo): lo controla la placa; al llegar a 80 °C se pone al 100 % y bajo 75 °C se le devuelve a la placa. Nunca lo pone por debajo de lo que pone la placa.
 - Al encender la PC arranca en **Normal fresco**. Si dejas la PC sola 20 minutos en un modo de juego (sin el juego abierto), vuelve sola a Normal fresco.
 - **Windows original** deshace todo y deja Windows como estaba.
 
@@ -25,6 +26,7 @@ con **Intel Core i7-7700**, pensado para jugar (por ejemplo ARC Raiders) sin que
 |---|---|
 | Gaming eficiente dinámico | 4.2 GHz (Turbo eficiente) |
 | Gaming dinámico | 4.2 GHz (Turbo agresivo) |
+| Trabajo | 4.2 GHz (Turbo a demanda) |
 | Normal fresco / Alto rendimiento / Ahorro | 3.3 GHz |
 | Gaming fresco / CPU suelto | 3.2 GHz |
 | Windows original | sin regulador |
